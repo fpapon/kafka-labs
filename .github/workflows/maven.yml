@@ -1,0 +1,49 @@
+name: Github CI
+
+on: [push, pull_request]
+
+env:
+  MAVEN_OPTS: -Dmaven.repo.local=/home/runner/work/kafka/.m2 -Dmaven.artifact.threads=256 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+
+jobs:
+  build:
+    name: Main Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone
+        uses: actions/checkout@v1
+      - name: Cache Maven Repository
+        uses: actions/cache@v2
+        with:
+          path: |
+            /home/runner/work/kafka/.m2
+          key: m2_repository
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+      - name: Build
+        run: mvn install -Dm2.location=/home/runner/work/kafka/.m2
+      - name: Remove Snapshots Before Caching
+        run: find /home/runner/work/kafka/.m2 -name '*SNAPSHOT' | xargs rm -Rf
+  security_audit:
+    name: Security Audit
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone
+        uses: actions/checkout@v1
+      - name: Cache Maven Repository
+        uses: actions/cache@v1
+        with:
+          path: /home/runner/work/kafka/.m2
+          key: m2_repository
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+      - name: Build
+        run: mvn install -DskipTests ossindex:audit
+      - name: Remove Snapshots Before Caching
+        run: find /home/runner/work/kafka/.m2 -name '*SNAPSHOT' | xargs rm -Rf

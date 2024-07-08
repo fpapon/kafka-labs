@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2024-Present - Francois Papon - Openobject.fr - https://openobject.fr
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>re.orange.observability</groupId>
+    <artifactId>metrics-kafka</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>OpenObject :: Labs :: Kafka</name>
+
+    <description>
+        A labs project to show how to use Kafka Client in a native way without dependency injection framework.
+    </description>
+
+    <organization>
+        <name>Francois Papon - Openobject.fr</name>
+        <url>https://openobject.fr</url>
+    </organization>
+    <inceptionYear>2024-Present</inceptionYear>
+
+    <properties>
+        <main.class>fr.openobject.labs.kafka.Runner</main.class>
+
+        <!-- docker image -->
+        <image.base>ossyupiik/java:21.0.3@sha256:1798836a84fb92ac96ec169c48ec131ecb57bb9848b11ccb8f2ca3f96c2b9da8</image.base>
+        <image.registry>local</image.registry>
+        <image.name>${image.registry}/openobject/labs-kafka:${project.version}</image.name>
+        <image.workdir>/opt/openobject/kafka</image.workdir>
+
+        <!-- stack -->
+        <kafka.version>3.7.0</kafka.version>
+        <johnzon-jsonb>2.0.1</johnzon-jsonb>
+
+        <!-- spec -->
+        <jakarta.json.bind-api.version>3.0.0</jakarta.json.bind-api.version>
+        <jakarta.json-api.version>2.1.3</jakarta.json-api.version>
+
+        <!-- observability -->
+        <opentelemetry.version>2.0.0</opentelemetry.version>
+
+        <!-- test -->
+        <junit.version>5.11.0-M2</junit.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.json.bind</groupId>
+            <artifactId>jakarta.json.bind-api</artifactId>
+            <version>${jakarta.json.bind-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+            <version>${jakarta.json-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.johnzon</groupId>
+            <artifactId>johnzon-jsonb</artifactId>
+            <version>${johnzon-jsonb}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.13</artifactId>
+            <version>${kafka.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
+                    <encoding>UTF-8</encoding>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${main.class}</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>filter</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>${main.class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>io.opentelemetry.javaagent</groupId>
+                            <artifactId>opentelemetry-javaagent</artifactId>
+                            <version>${opentelemetry.version}</version>
+                            <type>jar</type>
+                            <overWrite>false</overWrite>
+                            <outputDirectory>${project.build.directory}/opentelemetry</outputDirectory>
+                            <destFileName>opentelemetry.jar</destFileName>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                        <LABS_KAFKA_TOPIC>test.topic.ticket</LABS_KAFKA_TOPIC>
+                        <LABS_KAFKA_POLLING_INTERVAL>1000</LABS_KAFKA_POLLING_INTERVAL>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
+            <!-- mvn exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <mainClass>${main.class}</mainClass>
+                    <environmentVariables>
+                        <LABS_HTTP_SERVER_PORT>8080</LABS_HTTP_SERVER_PORT>
+                        <LABS_KAFKA_BOOTSTRAP_SERVERS>localhost:9092</LABS_KAFKA_BOOTSTRAP_SERVERS>
+                        <LABS_KAFKA_GROUP_ID>consumer.labs</LABS_KAFKA_GROUP_ID>
+                        <LABS_KAFKA_TOPIC>topic.ticket</LABS_KAFKA_TOPIC>
+                        <LABS_KAFKA_POLLING_INTERVAL>5000</LABS_KAFKA_POLLING_INTERVAL>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
+            <!-- mvn license:format -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>4.3</version>
+                <executions>
+                    <execution>
+                        <id>check-license</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <inherited>false</inherited>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <mapping>
+                        <adoc>DOUBLESLASH_STYLE</adoc>
+                    </mapping>
+                    <licenseSets>
+                        <licenseSet>
+                            <inlineHeader><![CDATA[Copyright (c) ${project.inceptionYear} - ${project.organization.name} - ${project.organization.url}
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+]]></inlineHeader>
+                            <useDefaultExcludes>true</useDefaultExcludes>
+                            <includes>
+                                <include>**/*.properties</include>
+                                <include>**/*.java</include>
+                                <include>**/*.xml</include>
+                                <include>**/*.yaml</include>
+                            </includes>
+                            <excludes>
+                                <exclude>LICENSE</exclude>
+                                <exclude>**/*.adoc</exclude>
+                                <exclude>**/*.idea</exclude>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/generated/**</exclude>
+                                <exclude>**/minisite/**</exclude>
+                                <exclude>**/file</exclude>
+                                <exclude>**/.m2/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                </configuration>
+            </plugin>
+
+            <!--  mvn ossindex:audit -->
+            <plugin>
+                <groupId>org.sonatype.ossindex.maven</groupId>
+                <artifactId>ossindex-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>audit-dependencies</id>
+                        <phase />
+                        <goals>
+                            <goal>audit</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scope>compile,runtime</scope>
+                    <!-- // exclude false positive  -->
+                    <!--<excludeVulnerabilityIds></excludeVulnerabilityIds>-->
+                </configuration>
+            </plugin>
+
+            <!--
+                mvn package jib:dockerBuild -DskipTests
+            -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.3</version>
+                <configuration>
+                    <containerizingMode>packaged</containerizingMode>
+                    <from>
+                        <image>${image.base}</image>
+                    </from>
+                    <to>
+                        <image>${image.name}</image>
+                    </to>
+                    <container>
+                        <appRoot>${image.workdir}</appRoot>
+                        <workingDirectory>${image.workdir}</workingDirectory>
+                        <extraClasspath>${image.workdir}/${project.artifactId}/lib/*</extraClasspath>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                        <filesModificationTime>EPOCH_PLUS_SECOND</filesModificationTime>
+                        <mainClass>${main.class}</mainClass>
+                        <jvmFlags>
+                            <jvmFlag>-Djava.security.egd=file:/dev/./urandom</jvmFlag>
+                            <jvmFlag>-Djdk.serialFilter=!*</jvmFlag>
+                            <jvmFlag>-Djdk.jndi.object.factoriesFilter=!*</jvmFlag>
+                            <jvmFlag>-Dcom.sun.jndi.ldap.object.trustSerialData=false</jvmFlag>
+                            <jvmFlag>-Dopenobject.build.timestamp=${maven.build.timestamp}</jvmFlag>
+                        </jvmFlags>
+                        <labels>
+                            <org.opencontainers.image.created>${maven.build.timestamp}</org.opencontainers.image.created>
+                            <org.opencontainers.image.authors>Francois Papon</org.opencontainers.image.authors>
+                            <org.opencontainers.image.vendor>fr.openobject</org.opencontainers.image.vendor>
+                            <org.opencontainers.image.title>${project.artifactId}</org.opencontainers.image.title>
+                            <org.opencontainers.image.description>${project.description}</org.opencontainers.image.description>
+                            <org.opencontainers.image.version>${project.version}</org.opencontainers.image.version>
+                            <fr.openobject.params>_JAVA_OPTIONS=...</fr.openobject.params>
+                            <fr.openobject.cmd>docker run ${image.name} &lt;args&gt;</fr.openobject.cmd>
+                        </labels>
+                    </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>${project.build.outputDirectory}/opentelemetry</from>
+                                <into>${image.workdir}/opentelemetry</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
+                    <outputPaths>
+                        <imageJson>${project.build.directory}/jib-image.json</imageJson>
+                    </outputPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>maven_central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
+
+</project>

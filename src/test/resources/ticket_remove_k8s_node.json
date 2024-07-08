@@ -1,0 +1,7 @@
+{
+  "id": "UHlBXTUvRouW_2gERZADVa",
+  "name": "JIRA-456",
+  "level": "LOW",
+  "description": "Remove new kubernetes node",
+  "type": "Remove_K8S_Node"
+}

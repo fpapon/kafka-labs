@@ -1,0 +1,11 @@
+target
+dist
+.idea
+*.iml
+**/*.versionsBackup
+/.classpath
+.classpath
+.project
+.settings
+/src/docker/metabase-data
+**/.DS_Store

@@ -1,0 +1,50 @@
+= Apache Kafka Labs
+
+A labs project to show how to use Kafka Client in a native way without dependency injection framework.
+
+== Pre-requisite
+
+* Java 21+
+* Maven 3.8.x+
+
+==  Build
+
+[source, bash]
+----
+mvn clean install
+----
+
+== Run locally
+
+Using the maven exec plugin:
+
+[source, bash]
+----
+mvn exec:java
+----
+
+Using a shell script:
+
+[source, bash]
+----
+./start.sh
+----
+
+== Build docker image
+
+[source, bash]
+----
+mvn package jib:dockerBuild -DskipTests
+----
+
+== Opentelemetry
+
+[source, bash]
+----
+java -javaagent:./target/opentelemetry/opentelemetry.jar -Dotel.traces.exporter=none -Dotel.logs.exporter=none -Dotel.metrics.exporter=prometheus -Dotel.exporter.prometheus.port=12345 \
+----
+
+[source, bash]
+----
+curl http://localhost:12345
+----
