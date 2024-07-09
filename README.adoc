@@ -1,3 +1,5 @@
+image::https://github.com/fpapon/kafka-labs/actions/workflows/maven.yml/badge.svg?branch=main[Github CI]
+
 = Apache Kafka Labs
 
 A labs project to show how to use Kafka Client in a native way without dependency injection framework.
